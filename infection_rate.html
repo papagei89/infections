@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Coronavirus</title>
+	<meta charset="utf-8">
+	<script src="https://unpkg.com/mathjs@7.5.1/dist/math.min.js"></script>
+	<script src="https://d3js.org/d3.v4.js"></script>
+</head>
+<body>
+
+Number of days : <input type="number" id="numberOfDays" value="365"><br>
+Initial Cases : <input type="number" id="initial_cases" value="40000"><br>
+When do you start confinement : <input type="number" id="above_limit" value="41000"><br>
+When do you stop confinement : <input type="number" id="lower_limit" value="5000"><br>
+Infection Rate Without Confinement : <input type="number" id="infection_rate_without_confinement" value="1.03998073578"><br>
+Infection Rate With Confinement : <input type="number" id="infection_rate_with_confinement" value="0.90145501705"><br>
+Confinement actif : <input type="checkbox" id="confinement" value="confinement" checked><br>
+Death Rate : <input type="number" id="percentage_deaths" value="1">%<br>
+Delay before confinement measures start taking effect : <input type="number" id="delay" value="21"><br><br>
+
+<button onclick="displayGraph()">Actualiser</button>
+
+<div id="my_dataviz"></div>
+
+Confinement Percentage : <span id="percentageOfConfinement">Confinement Percentage : </span><br>
+Average Number of Cases : <span id="averageNbCases"></span><br>
+Number of Deaths : <span id="deaths"></span><br>
+Average Continuous Days of Confinement : <span id="length_confinement"></span>
+
+<script>
+function displayGraph() {
+	document.getElementById('my_dataviz').innerHTML = "";
+	let above_limit = document.getElementById('above_limit').value;
+	let lower_limit = document.getElementById('lower_limit').value;
+	let infection_rate_without_confinement = document.getElementById('infection_rate_without_confinement').value;;
+	let infection_rate_with_confinement = document.getElementById('infection_rate_with_confinement').value;;
+	let initial_cases = document.getElementById('initial_cases').value;;
+	let number_of_days = document.getElementById('numberOfDays').value;
+	let confinement = document.getElementById('confinement').checked;
+	let active_contamination_rate = !confinement ? infection_rate_without_confinement: infection_rate_with_confinement;
+	let nb_cases = initial_cases;
+	let array_cases = [];
+	let array_confinement = [];
+	let array_deaths = [];
+	let array_display = [];
+	let percentage_deaths = document.getElementById('percentage_deaths').value;;
+	let delay = document.getElementById('delay').value;;
+	let counter_delay = 0;
+	let periods_of_confinement = 0;
+
+	for (let i=0; i < number_of_days; i++) {
+		if (nb_cases > above_limit && !confinement) {
+			if (counter_delay > delay) {
+				confinement = true;
+				periods_of_confinement++;
+				active_contamination_rate = infection_rate_with_confinement;
+				counter_delay = 0;
+			} else {
+				counter_delay++;
+			}
+		} else if (nb_cases < lower_limit && confinement) {
+			confinement = false;
+			active_contamination_rate = infection_rate_without_confinement;
+		}
+		nb_cases = active_contamination_rate * nb_cases;
+		if (confinement) {
+			array_confinement.push(100);
+		} else array_confinement.push(0);
+		array_display.push({"day": i.toString(), "nb_cases": math.round(nb_cases).toString()})
+		array_cases.push(math.round(nb_cases))
+		array_deaths.push(math.round(percentage_deaths*nb_cases/100));
+	}
+
+	document.getElementById('percentageOfConfinement').innerHTML = math.round(math.mean(array_confinement), 1);
+	document.getElementById('averageNbCases').innerHTML = math.round(math.mean(array_cases));
+	document.getElementById('deaths').innerHTML = math.sum(array_deaths);
+	document.getElementById('length_confinement').innerHTML = math.round(math.mean(array_confinement)/100*number_of_days/periods_of_confinement, 1);
+	// console.log('average nb cases ', array_cases);
+// set the dimensions and margins of the graph
+	var margin = {top: 10, right: 30, bottom: 30, left: 60},
+	    width = 460 - margin.left - margin.right,
+	    height = 400 - margin.top - margin.bottom;
+
+	// append the svg object to the body of the page
+	var svg = d3.select("#my_dataviz")
+	  .append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	    .attr("transform",
+	          "translate(" + margin.left + "," + margin.top + ")");
+
+	  // Add X axis
+	  var x = d3.scaleLinear()
+	    .domain([0, number_of_days])
+	    .range([ 0, width ]);
+	  svg.append("g")
+	    .attr("transform", "translate(0," + height + ")")
+	    .call(d3.axisBottom(x));
+
+	  // Add Y axis
+	  var y = d3.scaleLinear()
+	    .domain([0, math.max(array_cases) + 1000])
+	    .range([ height, 0]);
+	  svg.append("g")
+	    .call(d3.axisLeft(y));
+
+	  // Add dots
+	  svg.append('g')
+	    .selectAll("dot")
+	    .data(array_display)
+	    .enter()
+	    .append("circle")
+	      .attr("cx", function (d) { return x(d.day); })
+	      .attr("cy", function (d) { return y(d.nb_cases); })
+	      .attr("r", 1.5)
+	      .style("fill", "#69b3a2")
+}
+displayGraph()
+</script>
+
+</body>
+</html>
