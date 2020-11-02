@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Coronavirus</title>
+	<title>Coronavirus - duration of confinement and effects of different public policies</title>
 	<meta charset="utf-8">
+	<meta name="description" content="This application aims at better understanding the effects of different public policies relative to confinement and the spead of Covid 19">
 	<script src="https://unpkg.com/mathjs@7.5.1/dist/math.min.js"></script>
 	<script src="https://d3js.org/d3.v4.js"></script>
 </head>
@@ -18,7 +19,7 @@ Confinement actif : <input type="checkbox" id="confinement" value="confinement" 
 Death Rate : <input type="number" id="percentage_deaths" value="1">%<br>
 Delay before confinement measures start taking effect : <input type="number" id="delay" value="21"><br><br>
 
-<button onclick="displayGraph()">Actualiser</button>
+<button onclick="displayGraph()">Refresh</button>
 
 <div id="my_dataviz"></div>
 
@@ -119,5 +120,7 @@ function displayGraph() {
 displayGraph()
 </script>
 
+
+<p>Made with ❤️ by <a href="https://ideta.io">Ideta</a></p>
 </body>
 </html>
